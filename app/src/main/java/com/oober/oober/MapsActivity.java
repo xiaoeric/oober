@@ -44,4 +44,16 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap.addMarker(new MarkerOptions().position(rimac).title("Marker in RIMAC Arena"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(rimac));
     }
+
+    /**
+     * Picks a random point within the radius of a starting point.
+     * @param lat Latitude of starting point
+     * @param lon Longitude of starting point
+     * @param radius Radius around starting point
+     * @return double array of size 2, contains latitude and longitude of random point
+     */
+    private double[] pickRandomPoint(double lat, double lon, double radius) {
+        // TODO
+        return new double[]{0.0,0.0};
+    }
 }
