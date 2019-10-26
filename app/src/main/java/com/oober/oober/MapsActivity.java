@@ -53,9 +53,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @return double array of size 2, contains latitude and longitude of random point
      */
     private double[] pickRandomPoint(double lat, double lon, double radius) {
-        double randomLat= (Math.random()*(2*radius)+lat-15);
-        double randomLon= (Math.random()*(2*radius)+lon-15);
-        return new double[]{randomLon,randomLat;
-
+        double randomLat = (Math.random()*(2*radius)+lat-15);
+        double randomLon = (Math.random()*(2*radius)+lon-15);
+        return new double[]{randomLon,randomLat};
     }
 }
