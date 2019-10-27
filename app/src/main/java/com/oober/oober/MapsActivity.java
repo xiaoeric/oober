@@ -253,7 +253,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private static double distance(LatLng point1, LatLng point2) {
-        return 0.0;
+        double distances = Math.pow(point1.latitude-point2.latitude,2) + Math.pow(point1.longitude-point2.longitude,2);
+        double distances = Math.sqrt(distances);
+        return distances;
     }
 
     @Override
