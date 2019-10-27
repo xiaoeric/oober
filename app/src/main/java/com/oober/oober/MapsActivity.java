@@ -44,6 +44,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final double COW_WALK_MPH = 50.0;
     private static final float ROUTE_WIDTH = 10.0f;
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static final float ZOOM_LEVEL = 16.0f; //This goes up to 21
 
     private GoogleMap mMap;
     private LatLng currentLoc;
@@ -117,6 +118,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         Polyline route = renderRoute(dirResult.routes[0]);
         route.setVisible(false);
 
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(
+                new LatLng(driverPnt.lat, driverPnt.lng), ZOOM_LEVEL));
+
         // TODO animate marker
         animateMarker(driverMarker, route);
 
@@ -152,8 +156,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         currentLoc = makePoint(RIMAC_LATLNG);
         mMap.addMarker(new MarkerOptions().position(currentLoc).title("Current Location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
-        float zoomLevel = 16.0f; //This goes up to 21
-        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, zoomLevel));
+
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, ZOOM_LEVEL));
     }
 
     private Polyline renderRoute(DirectionsRoute route) {
@@ -188,7 +192,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             @Override
             public void run() {
                 MarkerAnimation.animateMarkerToGB(m, waypoint, new LatLngInterpolator.Spherical());
-                route.setVisible(false);
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        route.setVisible(false);
+                    }
+                }, 1000);
             }
         }, 2000 * multiplier);
         animateMarkerHelper(m, iter, ++multiplier, waypoint);
@@ -212,16 +221,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         plotWaypointsHelper(iter, ++multiplier);
     }
 
-    @Deprecated
-    private void animateMarker(Marker m, DirectionsRoute route) {
-        Log.d("legs", Integer.toString(route.legs.length));
-        Log.d("waypointOrder", Integer.toString(route.waypointOrder.length));
-        for (DirectionsLeg leg : route.legs) {
-            MarkerAnimation.animateMarkerToGB(m,
-                    new LatLng(leg.endLocation.lat, leg.endLocation.lng),
-                    new LatLngInterpolator.Spherical());
-        }
-    }
+
 
     /**
      * Picks a random point within the radius of a starting point.
