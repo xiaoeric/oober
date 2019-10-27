@@ -1,5 +1,9 @@
 <resources>
-    <string name="app_name">Oober</string>
+    <string name="app_name">Moober</string>
     <string name="title_activity_maps">Map</string>
-    <string name="request_button">Request Oober</string>
+    <string name="request_button">Request Moober</string>
+    <string name="submit_button">Submit</string>
+    <string name="loading_text">Locating your Moober</string>
+    <string name="arriving_text">Your Moober is arriving soon!</string>
+    <string name="get_on_text">Get On Moober</string>
 </resources>
