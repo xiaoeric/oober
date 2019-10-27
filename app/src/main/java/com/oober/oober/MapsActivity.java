@@ -110,11 +110,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         driverMarker.getPosition().longitude))
                 .optimizeWaypoints(true);
 
-        DirectionsResult dirResult = generateRoute(request);
+        DirectionsResult dirResult = generateDirResult(request);
 
         Log.d("DirectionsResult", Integer.toString(dirResult.routes.length));
 
         Polyline route = renderRoute(dirResult.routes[0]);
+        route.setVisible(false);
 
         // TODO animate marker
         animateMarker(driverMarker, route);
@@ -123,7 +124,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     }
 
-    private DirectionsResult generateRoute(DirectionsApiRequest request) {
+    private DirectionsResult generateDirResult(DirectionsApiRequest request) {
         DirectionsResult dirResult = null;
         try {
             dirResult = request.await();
@@ -165,22 +166,32 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .width(ROUTE_WIDTH));
     }
 
-    private void animateMarker(Marker m, Polyline route) {
-        Iterator<LatLng> iter = route.getPoints().iterator();
-        animateMarkerHelper(m, iter, 0);
+    private Polyline renderRoute(LatLng start, LatLng end) {
+        return mMap.addPolyline(new PolylineOptions()
+                .add(start)
+                .add(end)
+                .color(Color.BLUE)
+                .width(ROUTE_WIDTH));
     }
 
-    private void animateMarkerHelper(Marker m, Iterator<LatLng> iter, int multiplier) {
+    private void animateMarker(Marker m, Polyline route) {
+        Iterator<LatLng> iter = route.getPoints().iterator();
+        animateMarkerHelper(m, iter, 0, route.getPoints().get(route.getPoints().size() - 1));
+    }
+
+    private void animateMarkerHelper(Marker m, Iterator<LatLng> iter, int multiplier, LatLng finalDest) {
         if (!iter.hasNext()) { return; }
         final Handler handler = new Handler();
         LatLng waypoint = iter.next();
+        Polyline route = renderRoute(waypoint, finalDest);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
                 MarkerAnimation.animateMarkerToGB(m, waypoint, new LatLngInterpolator.Spherical());
+                route.setVisible(false);
             }
         }, 2000 * multiplier);
-        animateMarkerHelper(m, iter, ++multiplier);
+        animateMarkerHelper(m, iter, ++multiplier, finalDest);
     }
 
     private void plotWaypoints(Polyline route) {
