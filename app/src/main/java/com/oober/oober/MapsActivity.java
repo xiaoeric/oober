@@ -176,14 +176,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private void animateMarker(Marker m, Polyline route) {
         Iterator<LatLng> iter = route.getPoints().iterator();
-        animateMarkerHelper(m, iter, 0, route.getPoints().get(route.getPoints().size() - 1));
+        animateMarkerHelper(m, iter, 0, route.getPoints().get(0));
     }
 
-    private void animateMarkerHelper(Marker m, Iterator<LatLng> iter, int multiplier, LatLng finalDest) {
+    private void animateMarkerHelper(Marker m, Iterator<LatLng> iter, int multiplier, LatLng prev) {
         if (!iter.hasNext()) { return; }
         final Handler handler = new Handler();
         LatLng waypoint = iter.next();
-        Polyline route = renderRoute(waypoint, finalDest);
+        Polyline route = renderRoute(prev, waypoint);
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
@@ -191,7 +191,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 route.setVisible(false);
             }
         }, 2000 * multiplier);
-        animateMarkerHelper(m, iter, ++multiplier, finalDest);
+        animateMarkerHelper(m, iter, ++multiplier, waypoint);
     }
 
     private void plotWaypoints(Polyline route) {
