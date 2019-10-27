@@ -2,6 +2,7 @@ package com.oober.oober;
 
 import androidx.fragment.app.FragmentActivity;
 
+import android.graphics.Color;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -17,22 +18,32 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.maps.DirectionsApi;
+import com.google.maps.DirectionsApiRequest;
 import com.google.maps.GaeRequestHandler;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.PendingResult;
 import com.google.maps.RoadsApi;
+import com.google.maps.model.DirectionsResult;
+import com.google.maps.model.DirectionsRoute;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.SnappedPoint;
+import com.google.maps.model.TravelMode;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
     private static final double[] RIMAC_LATLNG = new double[]{32.885251, -117.239186};
+    private static final double[] JUSTICE_LN_LATLNG = new double[]{32.883128, -117.232217};
     private static final double SEARCH_RADIUS = (15.0 + 12.0) / 2.0;
     private static final String GEO_API_KEY = "AIzaSyAC05OOvIYZ1pkOu2ePkoSlHDBno-8g3QA";
-    private static final String MOOBER_FILE = "images/moober.png";
+    private static final String MOOBER_FILE = "images\\moober.bmp";
+    private static final double COW_WALK_MPH = 50.0;
+    private static final float ROUTE_WIDTH = 10.0f;
 
     private GoogleMap mMap;
     private LatLng currentLoc;
@@ -49,6 +60,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         context = new GeoApiContext.Builder()
                 .apiKey(GEO_API_KEY).build();
+
+        // TODO just a test
         try {
             GeocodingResult[] results = GeocodingApi.geocode(context,
                     "1600 Amphitheatre Parkway Mountain View, CA 94043").await();
@@ -71,28 +84,51 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 // Choose random point for driver
                 double radius = (milesToLatDeg(SEARCH_RADIUS) +
                                  milesToLngDeg(currentLoc.latitude, SEARCH_RADIUS)) / 2.0;
-                LatLng driver = makePoint(pickRandomPoint(currentLoc.latitude,
-                                                          currentLoc.longitude, radius));
+                // TODO make random point radius
                 com.google.maps.model.LatLng driverPnt = new com.google.maps.model.LatLng(
-                        32.885251, -117.239186); // TODO
+                        JUSTICE_LN_LATLNG[0], JUSTICE_LN_LATLNG[1]);
 
                 Log.d("driverPnt", "Lat: " + driverPnt.lat + " Lng: " + driverPnt.lng);
 
-                SnappedPoint[] results = null;
+                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+
+                SnappedPoint[] roadResults = null;
                 try {
-                    results = RoadsApi.nearestRoads(
+                    roadResults = RoadsApi.nearestRoads(
                             context, driverPnt).await();
-                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
-                    Log.d("RoadsApi result", gson.toJson(results[0]));
+                    Log.d("RoadsApi result", gson.toJson(roadResults[0]));
                 } catch (Exception e) {
                     Log.d("RoadsApi error", e.getMessage());
                 }
 
-                // TODO: display
-                mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(results[0].location.lat, results[0].location.lng))
+                Marker driverMarker = mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(roadResults[0].location.lat, roadResults[0].location.lng))
                         .title("Moober")
-                        /*.icon(BitmapDescriptorFactory.fromFile(MOOBER_FILE))*/);
+                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.spoiler_moober))
+                        .anchor(0.5f, 0.5f));
+
+                DirectionsApiRequest request = DirectionsApi.newRequest(context)
+                        .destination(new com.google.maps.model.LatLng(
+                                currentLoc.latitude, currentLoc.longitude))
+                        .mode(TravelMode.WALKING)
+                        .origin(new com.google.maps.model.LatLng(
+                                driverMarker.getPosition().latitude,
+                                driverMarker.getPosition().longitude))
+                        .optimizeWaypoints(true);
+
+                DirectionsResult dirResult = null;
+                try {
+                    dirResult = request.await();
+                    Log.d("DirectionsApi result", gson.toJson(dirResult));
+                } catch (Exception e) {
+                    Log.d("DirectionsApi error", e.getMessage());
+                }
+
+                // TODO render route
+                Polyline route = renderRoute(dirResult.routes[0]);
+
+                // TODO animate marker
+                animateMarker(driverMarker, route);
             }
         });
     }
@@ -114,6 +150,23 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         currentLoc = makePoint(RIMAC_LATLNG);
         mMap.addMarker(new MarkerOptions().position(currentLoc).title("Current Location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
+    }
+
+    private Polyline renderRoute(DirectionsRoute route) {
+        PolylineOptions lineOpts = new PolylineOptions();
+        for (com.google.maps.model.LatLng waypoint : route.overviewPolyline.decodePath()) {
+            lineOpts.add(new LatLng(waypoint.lat, waypoint.lng));
+        }
+        return mMap.addPolyline(lineOpts
+                .color(Color.BLUE)
+                .width(ROUTE_WIDTH));
+    }
+
+    private void animateMarker(Marker m, Polyline route) {
+
+        for (LatLng waypoint : route.getPoints()) {
+            MarkerAnimation.animateMarkerToGB(m, waypoint, new LatLngInterpolator.Spherical());
+        }
     }
 
     /**
