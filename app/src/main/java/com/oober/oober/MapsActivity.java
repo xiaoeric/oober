@@ -7,14 +7,11 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
-import android.widget.RelativeLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
-import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
@@ -25,10 +22,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.maps.DirectionsApi;
 import com.google.maps.DirectionsApiRequest;
-import com.google.maps.GaeRequestHandler;
 import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
-import com.google.maps.PendingResult;
 import com.google.maps.RoadsApi;
 import com.google.maps.model.DirectionsLeg;
 import com.google.maps.model.DirectionsResult;
@@ -48,6 +43,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static final String MOOBER_FILE = "images\\moober.bmp";
     private static final double COW_WALK_MPH = 50.0;
     private static final float ROUTE_WIDTH = 10.0f;
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private GoogleMap mMap;
     private LatLng currentLoc;
@@ -89,13 +85,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Log.d("driverPnt", "Lat: " + driverPnt.lat + " Lng: " + driverPnt.lng);
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
         SnappedPoint[] roadResults = null;
         try {
             roadResults = RoadsApi.nearestRoads(
                     context, driverPnt).await();
-            Log.d("RoadsApi result", gson.toJson(roadResults[0]));
+            Log.d("RoadsApi result", GSON.toJson(roadResults[0]));
         } catch (Exception e) {
             Log.d("RoadsApi error", e.getMessage());
         }
@@ -115,13 +110,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         driverMarker.getPosition().longitude))
                 .optimizeWaypoints(true);
 
-        DirectionsResult dirResult = null;
-        try {
-            dirResult = request.await();
-            Log.d("DirectionsApi result", gson.toJson(dirResult));
-        } catch (Exception e) {
-            Log.d("DirectionsApi error", e.getMessage());
-        }
+        DirectionsResult dirResult = generateRoute(request);
 
         Log.d("DirectionsResult", Integer.toString(dirResult.routes.length));
 
@@ -132,6 +121,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //plotWaypoints(route);
 
+    }
+
+    private DirectionsResult generateRoute(DirectionsApiRequest request) {
+        DirectionsResult dirResult = null;
+        try {
+            dirResult = request.await();
+            Log.d("DirectionsApi result", GSON.toJson(dirResult));
+        } catch (Exception e) {
+            Log.d("DirectionsApi error", e.getMessage());
+        }
+        return dirResult;
     }
 
     /**
