@@ -271,7 +271,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     //For the cow names
     private static String mooberName() {
         String[] names = new String[]{"Fred","Molly","Joe", "Bob"};
-        return names[int(Math.random()*names.length)];
+        return names[(int)(Math.random()*names.length)];
     }
     @Override
     protected void onDestroy() {
