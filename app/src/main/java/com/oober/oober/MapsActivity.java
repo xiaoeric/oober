@@ -98,7 +98,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Marker driverMarker = mMap.addMarker(new MarkerOptions()
                 .position(new LatLng(roadResults[0].location.lat, roadResults[0].location.lng))
-                .title("Moober")
+                .title(mooberName())//USED THE MOOBER FUNCTION HERE. IF IT BREAKS, use "moober"
                 .icon(BitmapDescriptorFactory.fromResource(R.drawable.spoiler_moober))
                 .anchor(0.5f, 0.5f));
 
@@ -270,7 +270,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
     //For the cow names
     private static String mooberName() {
-        String[] names = new String[]{"Fred","Molly","Joe", "Bob"};
+        String[] names = new String[]{"Fred","Milkshake","Joe", "Bob", "Steak", "Big Mac", "Napoleon III", "Winnie the Moo", "Leonardo DiCowprio", "Moogan Freeman", "Buttercup", "Moohamed", "Whitney", "Bessie", "Angus", "Annie"};
         return names[(int)(Math.random()*names.length)];
     }
     @Override
