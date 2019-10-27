@@ -3,17 +3,40 @@ package com.oober.oober;
 import androidx.fragment.app.FragmentActivity;
 
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptor;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.maps.GaeRequestHandler;
+import com.google.maps.GeoApiContext;
+import com.google.maps.GeocodingApi;
+import com.google.maps.PendingResult;
+import com.google.maps.RoadsApi;
+import com.google.maps.model.GeocodingResult;
+import com.google.maps.model.SnappedPoint;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
+    private static final double[] RIMAC_LATLNG = new double[]{32.885251, -117.239186};
+    private static final double SEARCH_RADIUS = (15.0 + 12.0) / 2.0;
+    private static final String GEO_API_KEY = "AIzaSyAC05OOvIYZ1pkOu2ePkoSlHDBno-8g3QA";
+    private static final String MOOBER_FILE = "images/moober.png";
+
     private GoogleMap mMap;
+    private LatLng currentLoc;
+    private GeoApiContext context;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,8 +46,56 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-    }
 
+        context = new GeoApiContext.Builder()
+                .apiKey(GEO_API_KEY).build();
+        try {
+            GeocodingResult[] results = GeocodingApi.geocode(context,
+                    "1600 Amphitheatre Parkway Mountain View, CA 94043").await();
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            Log.d("Geocoding result", gson.toJson(results[0].addressComponents));
+        } catch (Exception e) {
+            Log.d("Geocoding error", e.getMessage());
+        }
+
+        // Create button to call oober
+        Button callButton = new Button(this);
+        callButton.setText("Request Oober");
+        addContentView(callButton, new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT));
+
+        callButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // Choose random point for driver
+                double radius = (milesToLatDeg(SEARCH_RADIUS) +
+                                 milesToLngDeg(currentLoc.latitude, SEARCH_RADIUS)) / 2.0;
+                LatLng driver = makePoint(pickRandomPoint(currentLoc.latitude,
+                                                          currentLoc.longitude, radius));
+                com.google.maps.model.LatLng driverPnt = new com.google.maps.model.LatLng(
+                        32.885251, -117.239186); // TODO
+
+                Log.d("driverPnt", "Lat: " + driverPnt.lat + " Lng: " + driverPnt.lng);
+
+                SnappedPoint[] results = null;
+                try {
+                    results = RoadsApi.nearestRoads(
+                            context, driverPnt).await();
+                    Gson gson = new GsonBuilder().setPrettyPrinting().create();
+                    Log.d("RoadsApi result", gson.toJson(results[0]));
+                } catch (Exception e) {
+                    Log.d("RoadsApi error", e.getMessage());
+                }
+
+                // TODO: display
+                mMap.addMarker(new MarkerOptions()
+                        .position(new LatLng(results[0].location.lat, results[0].location.lng))
+                        .title("Moober")
+                        /*.icon(BitmapDescriptorFactory.fromFile(MOOBER_FILE))*/);
+            }
+        });
+    }
 
     /**
      * Manipulates the map once available.
@@ -40,9 +111,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        LatLng rimac = new LatLng(32.885251, -117.239186);
-        mMap.addMarker(new MarkerOptions().position(rimac).title("Marker in RIMAC Arena"));
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(rimac));
+        currentLoc = makePoint(RIMAC_LATLNG);
+        mMap.addMarker(new MarkerOptions().position(currentLoc).title("Current Location"));
+        mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
     }
 
     /**
@@ -52,9 +123,39 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @param radius Radius around starting point
      * @return double array of size 2, contains latitude and longitude of random point
      */
-    private double[] pickRandomPoint(double lat, double lon, double radius) {
+    private static double[] pickRandomPoint(double lat, double lon, double radius) {
         double randomLat = (Math.random()*(2*radius)+lat-15);
         double randomLon = (Math.random()*(2*radius)+lon-15);
         return new double[]{randomLon,randomLat};
+    }
+
+    private static LatLng makePoint(double[] coords) {
+        return new LatLng(coords[0], coords[1]);
+    }
+
+    /**
+     * Converts miles travelled to degrees latitude travelled.
+     * @param miles Miles travelled
+     * @return Degrees latitude travelled
+     */
+    private static double milesToLatDeg(double miles) {
+        double latKM = miles * 0.621371;
+        return (1 / 110.54) * latKM;
+    }
+
+    /**
+     * Converts miles travelled to degrees longitude travelled.
+     * @param miles Miles travelled
+     * @return Degrees longitude travelled
+     */
+    private static double milesToLngDeg(double currentLat, double miles) {
+        double longKM = miles * 0.621371;
+        return (1 / (111.320 * Math.cos(currentLat))) * longKM;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        context.shutdown();
     }
 }
