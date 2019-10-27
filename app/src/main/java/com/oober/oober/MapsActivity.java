@@ -177,9 +177,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
      * @return double array of size 2, contains latitude and longitude of random point
      */
     private double[] pickRandomPoint(double lat, double lon, double radius) {
-        double newRadiusLon= milesToLngDeg(currentLoc.latitude, radius);
-        double newRadiusLat= milesToLatDeg(radius);
-      //Length of 1 degree of Longitude = cosine (latitude in decimal degrees) * length of degree (miles) at equator
+        double newRadiusLon= milesToLataDeg(currentLoc.latitude, radius);
+        double newRadiusLat= milesToLngDeg(lat,radius);
+        //Length of 1 degree of Longitude = cosine (latitude in decimal degrees) * length of degree (miles) at equator
         double randomLat = (Math.random()*(2*newRadiusLat)+lat-newRadiusLat);
         double randomLon = (Math.random()*(2*newRadiusLon)+lon-newRadiusLon);
         return new double[]{randomLon,randomLat};
