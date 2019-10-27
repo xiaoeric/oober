@@ -36,8 +36,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/app/src/main/java/com/oober/oober/MapsActivity.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="17">
-              <caret line="198" column="36" lean-forward="true" selection-start-line="198" selection-start-column="36" selection-end-line="198" selection-end-column="36" />
+            <state relative-caret-position="1462">
+              <caret line="252" column="36" selection-start-line="252" selection-start-column="36" selection-end-line="252" selection-end-column="36" />
             </state>
           </provider>
         </entry>
@@ -63,41 +63,18 @@
           <expand>
             <path>
               <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
+              <item name="app" type="e9137016:NonAndroidModuleNode" />
             </path>
             <path>
               <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
+              <item name="app" type="e9137016:NonAndroidModuleNode" />
+              <item name="resources" type="f7eae187:NonAndroidSourceTypeNode" />
             </path>
             <path>
               <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-              <item name="oober" type="cbb59c9e:AndroidPsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-              <item name="oober" type="cbb59c9e:AndroidPsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="java" type="edd41e36:AndroidSourceTypeNode" />
-              <item name="oober" type="cbb59c9e:AndroidPsiDirectoryNode" />
-            </path>
-            <path>
-              <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="res" type="d4f16f75:AndroidResFolderNode" />
-            </path>
-            <path>
-              <item name="Oober" type="1abcf292:AndroidViewProjectNode" />
-              <item name="app" type="feadf853:AndroidModuleNode" />
-              <item name="res" type="d4f16f75:AndroidResFolderNode" />
-              <item name="layout" type="ddeffd01:AndroidResFolderTypeNode" />
+              <item name="app" type="e9137016:NonAndroidModuleNode" />
+              <item name="resources" type="f7eae187:NonAndroidSourceTypeNode" />
+              <item name="layout" type="462c0819:PsiDirectoryNode" />
             </path>
           </expand>
           <select />
@@ -201,8 +178,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-6" y="34" width="1293" height="693" extended-state="6" />
-    <editor active="true" />
+    <frame x="-6" y="34" width="1293" height="693" extended-state="7" />
     <layout>
       <window_info active="true" content_ui="combo" id="Project" visible="true" weight="0.21214575" />
       <window_info id="Structure" side_tool="true" />
@@ -230,8 +206,8 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/app/src/main/java/com/oober/oober/MapsActivity.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="17">
-          <caret line="198" column="36" lean-forward="true" selection-start-line="198" selection-start-column="36" selection-end-line="198" selection-end-column="36" />
+        <state relative-caret-position="1462">
+          <caret line="252" column="36" selection-start-line="252" selection-start-column="36" selection-end-line="252" selection-end-column="36" />
         </state>
       </provider>
     </entry>
