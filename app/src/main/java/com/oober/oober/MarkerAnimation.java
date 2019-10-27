@@ -1,5 +1,6 @@
 package com.oober.oober;
 
+import android.annotation.TargetApi;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.view.animation.AccelerateDecelerateInterpolator;
@@ -8,6 +9,8 @@ import android.view.animation.Interpolator;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 
+import static android.os.Build.VERSION_CODES.Q;
+
 public class MarkerAnimation {
 
     public static void animateMarkerToGB(final Marker marker, final LatLng finalPosition, final LatLngInterpolator latLngInterpolator) {
@@ -15,9 +18,9 @@ public class MarkerAnimation {
         final Handler handler = new Handler();
         final long start = SystemClock.uptimeMillis();
         final Interpolator interpolator = new AccelerateDecelerateInterpolator();
-        final float durationInMs = 10000;
+        final float durationInMs = 2000;
 
-        handler.post(new Runnable() {
+        Runnable r = new Runnable() {
             long elapsed;
             float t;
             float v;
@@ -37,6 +40,8 @@ public class MarkerAnimation {
                     handler.postDelayed(this, 16);
                 }
             }
-        });
+        };
+
+        handler.post(r);
     }
 }

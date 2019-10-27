@@ -4,6 +4,7 @@ import androidx.fragment.app.FragmentActivity;
 
 import android.graphics.Color;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -29,11 +30,14 @@ import com.google.maps.GeoApiContext;
 import com.google.maps.GeocodingApi;
 import com.google.maps.PendingResult;
 import com.google.maps.RoadsApi;
+import com.google.maps.model.DirectionsLeg;
 import com.google.maps.model.DirectionsResult;
 import com.google.maps.model.DirectionsRoute;
 import com.google.maps.model.GeocodingResult;
 import com.google.maps.model.SnappedPoint;
 import com.google.maps.model.TravelMode;
+
+import java.util.Iterator;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -72,65 +76,62 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
 
         // Create button to call oober
-        Button callButton = new Button(this);
-        callButton.setText("Request Oober");
-        addContentView(callButton, new RelativeLayout.LayoutParams(
-                RelativeLayout.LayoutParams.WRAP_CONTENT,
-                RelativeLayout.LayoutParams.WRAP_CONTENT));
 
-        callButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                // Choose random point for driver
-                double radius = (milesToLatDeg(SEARCH_RADIUS) +
-                                 milesToLngDeg(currentLoc.latitude, SEARCH_RADIUS)) / 2.0;
-                // TODO make random point radius
-                com.google.maps.model.LatLng driverPnt = new com.google.maps.model.LatLng(
-                        JUSTICE_LN_LATLNG[0], JUSTICE_LN_LATLNG[1]);
+    }
 
-                Log.d("driverPnt", "Lat: " + driverPnt.lat + " Lng: " + driverPnt.lng);
+    public void requestOober(View v) {
+        // Choose random point for driver
+        double radius = (milesToLatDeg(SEARCH_RADIUS) +
+                milesToLngDeg(currentLoc.latitude, SEARCH_RADIUS)) / 2.0;
+        // TODO make random point radius
+        com.google.maps.model.LatLng driverPnt = new com.google.maps.model.LatLng(
+                JUSTICE_LN_LATLNG[0], JUSTICE_LN_LATLNG[1]);
 
-                Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Log.d("driverPnt", "Lat: " + driverPnt.lat + " Lng: " + driverPnt.lng);
 
-                SnappedPoint[] roadResults = null;
-                try {
-                    roadResults = RoadsApi.nearestRoads(
-                            context, driverPnt).await();
-                    Log.d("RoadsApi result", gson.toJson(roadResults[0]));
-                } catch (Exception e) {
-                    Log.d("RoadsApi error", e.getMessage());
-                }
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
 
-                Marker driverMarker = mMap.addMarker(new MarkerOptions()
-                        .position(new LatLng(roadResults[0].location.lat, roadResults[0].location.lng))
-                        .title("Moober")
-                        .icon(BitmapDescriptorFactory.fromResource(R.drawable.spoiler_moober))
-                        .anchor(0.5f, 0.5f));
+        SnappedPoint[] roadResults = null;
+        try {
+            roadResults = RoadsApi.nearestRoads(
+                    context, driverPnt).await();
+            Log.d("RoadsApi result", gson.toJson(roadResults[0]));
+        } catch (Exception e) {
+            Log.d("RoadsApi error", e.getMessage());
+        }
 
-                DirectionsApiRequest request = DirectionsApi.newRequest(context)
-                        .destination(new com.google.maps.model.LatLng(
-                                currentLoc.latitude, currentLoc.longitude))
-                        .mode(TravelMode.WALKING)
-                        .origin(new com.google.maps.model.LatLng(
-                                driverMarker.getPosition().latitude,
-                                driverMarker.getPosition().longitude))
-                        .optimizeWaypoints(true);
+        Marker driverMarker = mMap.addMarker(new MarkerOptions()
+                .position(new LatLng(roadResults[0].location.lat, roadResults[0].location.lng))
+                .title("Moober")
+                .icon(BitmapDescriptorFactory.fromResource(R.drawable.spoiler_moober))
+                .anchor(0.5f, 0.5f));
 
-                DirectionsResult dirResult = null;
-                try {
-                    dirResult = request.await();
-                    Log.d("DirectionsApi result", gson.toJson(dirResult));
-                } catch (Exception e) {
-                    Log.d("DirectionsApi error", e.getMessage());
-                }
+        DirectionsApiRequest request = DirectionsApi.newRequest(context)
+                .destination(new com.google.maps.model.LatLng(
+                        currentLoc.latitude, currentLoc.longitude))
+                .mode(TravelMode.WALKING)
+                .origin(new com.google.maps.model.LatLng(
+                        driverMarker.getPosition().latitude,
+                        driverMarker.getPosition().longitude))
+                .optimizeWaypoints(true);
 
-                // TODO render route
-                Polyline route = renderRoute(dirResult.routes[0]);
+        DirectionsResult dirResult = null;
+        try {
+            dirResult = request.await();
+            Log.d("DirectionsApi result", gson.toJson(dirResult));
+        } catch (Exception e) {
+            Log.d("DirectionsApi error", e.getMessage());
+        }
 
-                // TODO animate marker
-                animateMarker(driverMarker, route);
-            }
-        });
+        Log.d("DirectionsResult", Integer.toString(dirResult.routes.length));
+
+        Polyline route = renderRoute(dirResult.routes[0]);
+
+        // TODO animate marker
+        animateMarker(driverMarker, route);
+
+        //plotWaypoints(route);
+
     }
 
     /**
@@ -150,6 +151,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         currentLoc = makePoint(RIMAC_LATLNG);
         mMap.addMarker(new MarkerOptions().position(currentLoc).title("Current Location"));
         mMap.moveCamera(CameraUpdateFactory.newLatLng(currentLoc));
+        float zoomLevel = 16.0f; //This goes up to 21
+        mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(currentLoc, zoomLevel));
     }
 
     private Polyline renderRoute(DirectionsRoute route) {
@@ -163,9 +166,49 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     private void animateMarker(Marker m, Polyline route) {
+        Iterator<LatLng> iter = route.getPoints().iterator();
+        animateMarkerHelper(m, iter, 0);
+    }
 
-        for (LatLng waypoint : route.getPoints()) {
-            MarkerAnimation.animateMarkerToGB(m, waypoint, new LatLngInterpolator.Spherical());
+    private void animateMarkerHelper(Marker m, Iterator<LatLng> iter, int multiplier) {
+        if (!iter.hasNext()) { return; }
+        final Handler handler = new Handler();
+        LatLng waypoint = iter.next();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                MarkerAnimation.animateMarkerToGB(m, waypoint, new LatLngInterpolator.Spherical());
+            }
+        }, 2000 * multiplier);
+        animateMarkerHelper(m, iter, ++multiplier);
+    }
+
+    private void plotWaypoints(Polyline route) {
+        Iterator<LatLng> iter = route.getPoints().iterator();
+        plotWaypointsHelper(iter, 0);
+    }
+
+    private void plotWaypointsHelper(Iterator<LatLng> iter, int multiplier) {
+        if (!iter.hasNext()) { return; }
+        final Handler handler = new Handler();
+        LatLng waypoint = iter.next();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mMap.addMarker(new MarkerOptions().position(waypoint));
+            }
+        }, 100 * multiplier);
+        plotWaypointsHelper(iter, ++multiplier);
+    }
+
+    @Deprecated
+    private void animateMarker(Marker m, DirectionsRoute route) {
+        Log.d("legs", Integer.toString(route.legs.length));
+        Log.d("waypointOrder", Integer.toString(route.waypointOrder.length));
+        for (DirectionsLeg leg : route.legs) {
+            MarkerAnimation.animateMarkerToGB(m,
+                    new LatLng(leg.endLocation.lat, leg.endLocation.lng),
+                    new LatLngInterpolator.Spherical());
         }
     }
 
@@ -207,6 +250,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private static double milesToLngDeg(double currentLat, double miles) {
         double longKM = miles * 0.621371;
         return (1 / (111.320 * Math.cos(currentLat))) * longKM;
+    }
+
+    private static double distance(LatLng point1, LatLng point2) {
+        return 0.0;
     }
 
     @Override
